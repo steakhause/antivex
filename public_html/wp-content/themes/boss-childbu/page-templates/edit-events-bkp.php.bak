@@ -1,0 +1,225 @@
+<?php
+/**
+ * Template Name: Edit Events Page Template
+ *
+ * Description: Use this page template for events page.
+ *
+ * @package WordPress
+ * @subpackage Boss
+ * @since Boss 1.0.0
+ */
+get_header(); ?>
+
+<?php
+  global $i2sdk;
+  $app = $i2sdk->isdk;
+
+  $user = wp_get_current_user();
+  $postId = $_GET['eventId'];
+?>
+
+<div class="<?php echo get_page_template_slug(); ?>">
+
+	<div id="primary" class="site-content">
+		<div id="content" role="main">
+
+			<?php
+				if ( have_posts() ) {
+					while ( have_posts() ) {
+						the_post();
+						get_template_part( 'content', 'page' );
+					}
+				}
+			?>
+
+			<?php
+				echo "Post ID: ".$postId.'<br />';
+				echo "Edit Post: ".get_the_title($postId);
+			?>
+			<form id="eventBuilder" class="eventBuilder" action="<?php echo get_site_url(); ?>/wp-content/themes/boss-child/edit-redirect.php" method="post">
+				<input type="hidden" name="postId" value="<?php echo $postId; ?>">
+				<ul class="editWindow">
+          <?php if(get_post_meta($postId,'eventTitle',true))
+          {echo '<li class="eventTitle"><input type="text" name="eventTitle" value='.get_post_meta($postId,'eventTitle',true).' /></li><br />';}
+					else{echo '<li class="eventTitle"><input type="text" name="eventTitle" placeholder="Event Name" /></li><br />';} ?>
+          <?php if(get_post_meta($postId,'eventDate',true))
+          {echo '<li class="EventDate"><input type="text" name="eventDate" class="datepicker" value='.get_post_meta($postId,'eventDate',true).' /></li><br />';}
+					else{echo '<li class="EventDate"><input type="text" name="eventDate" class="datepicker" placeholder="Event Date/Time" /></li><br />';} ?>
+					<li class="eventTime">
+						<select class="eventHour" name="eventHour">
+							<?php if(get_post_meta($postId,'eventHour',true))
+              {echo '<option value='.get_post_meta($postId,'eventHour',true).'>'.get_post_meta($postId,'eventHour',true).'</option>';}
+              else{echo '<option value="None" selected>Hour</option>';} ?>
+							<option value="01">01</option>
+							<option value="02">02</option>
+							<option value="03">03</option>
+							<option value="04">04</option>
+							<option value="05">05</option>
+							<option value="06">06</option>
+							<option value="07">07</option>
+							<option value="08">08</option>
+							<option value="09">09</option>
+							<option value="10">10</option>
+							<option value="11">11</option>
+							<option value="12">12</option>
+					  </select>
+						<select class="eventMinute" name="eventMinute">
+              <?php if(get_post_meta($postId,'eventMinute',true))
+              {echo '<option value='.get_post_meta($postId,'eventMinute',true).'>'.get_post_meta($postId,'eventMinute',true).'</option>';}
+              else{echo '<option value="None" selected>Minute</option>';} ?>
+							<option value="00">00</option>
+							<option value="15">15</option>
+							<option value="30">30</option>
+							<option value="45">45</option>
+					  </select>
+						<select class="eventAmPm" name="eventAmPm">
+              <?php if(get_post_meta($postId,'eventAmPm',true))
+              {echo '<option value='.get_post_meta($postId,'eventAmPm',true).'>'.get_post_meta($postId,'eventAmPm',true).'</option>';}
+              else{echo '<option value="None" selected>AM / PM</option>';} ?>
+							<option value="AM">AM</option>
+							<option value="PM">PM</option>
+						</select>
+						<select class="eventTimeZone" name="eventTimeZone">
+              <?php if(get_post_meta($postId,'eventTimeZone',true))
+              {echo '<option value='.get_post_meta($postId,'eventTimeZone',true).'>'.get_post_meta($postId,'eventTimeZone',true).'</option>';}
+              else{echo '<option value="None" selected>Time Zone</option>';} ?>
+							<option value="Eastren">Eastern</option>
+							<option value="Central">Central</option>
+							<option value="Mountain">Mountain</option>
+							<option value="Pacific">Pacific</option>
+					  </select>
+					</li><br />
+          <?php if(get_post_meta($postId,'eventLocation',true))
+          {echo '<li class="eventDescription"><input type="textarea" name="eventDescription" value='.get_post_field('post_content',$postId).' /></li><br />';}
+					else{echo '<li class="eventDescription"><input type="textarea" name="eventDescription" placeholder="Event Description" /></li><br />';} ?>
+          <?php if(get_post_meta($postId,'eventLocation',true))
+          {echo '<li class="eventLocation"><input type="text" name="eventLocation" value='.get_post_meta($postId,'eventLocation',true).' /></li><br />';}
+					else{echo '<li class="eventLocation"><input type="text" name="eventLocation" placeholder="Event Location" /></li><br />';} ?>
+
+          <h4>Choose a Mentor List:</h4>
+          <div class="listSelector">
+            <input type="radio" id="listByTag" name="mentorList" value="List by Tag" checked>List by Tag<br />
+            <input type="radio" id="listByName" name="mentorList" value="List by Name">List by Name<br /><br />
+          </div>
+
+          <?php
+          echo '<div id="mentorByTag" class="mentorByTag">';
+
+            $user_query = new WP_User_Query( array( 'role' => 'mentor_role', 'status' => 'mentorRole' ,'fields' => 'ID' ) );
+            $mentors = get_users( array( 'role' => 'mentor_role' ) );
+
+            if($mentors){
+              $mentor_list = array();
+              foreach ($mentors as $mentor) {
+                $mentorID = $mentor->ID;
+                $user = get_user_meta($mentorID);
+                $mentorRole = $user['mentorRole'][0];
+                $mentor_list[$mentorRole] = $mentor->nickname;
+              }
+            }
+
+            // $currentMentor = get_post_meta( $postId, 'eventMentor', true );
+
+            echo '<select id="eventMentor" class="eventMentorTag eventMentor" name="eventMentorByTag">';
+              echo '<option value="None" selected>Select a Mentor by Tag</option>';
+              echo build_options_list_by_key( $mentor_list, $currentMentor );
+            echo '</select><br /><br />';
+      			?>
+
+            <?php
+            $returnField = array('ContactId', 'Contact.FirstName', 'Contact.LastName');
+            // $query = array('GroupId' => get_post_meta($postId, 'eventMentor', true));
+            $query = array('GroupId' => 126);
+            $contacts = $app->dsQuery("ContactGroupAssign",100,0,$query,$returnField);
+            echo '<pre>'; print_r($contacts); echo '</pre>';
+            foreach ($contacts as $contact) {
+              $studentName = $contact['Contact.FirstName'].' '.$contact['Contact.LastName'];
+              $mentoringStudents['eventMentoringStudents[' . $contact['ContactId'] . ']'] = $studentName;
+            }
+
+            $tempArray = unserialize(get_post_meta( $postId, '_eventMentoringStudents', true ));
+            foreach($tempArray as $key=>$value){
+              $currentStudents['eventMentoringStudents[' . $key . ']'] = $value;
+            }
+
+          echo '</div>';
+          ?>
+
+          <?php
+          echo '<div id="mentorByName" class="mentorByName" style="display:none">';
+            $authors = get_users(array('role' => 'mentor_role'));
+            echo '<select id="eventMentorName" class="eventMentorName eventMentor" name="eventMentorByName">
+              <option value="None" selected>Select a Mentor by Name</option>';
+              foreach ($authors as $keys => $values) {
+                echo '<option value="'.$values->ID.'">'.$values->display_name.'</option>';
+              }
+            echo '</select><br /><br />';
+
+          echo '</div>';
+          ?>
+
+          <?php
+			$returnFields = array('Id');
+			$querys = array('GroupCategoryId' => 126);
+			$contact = $app->dsQuery("ContactGroup",100,0,$querys,$returnFields);
+
+			foreach ($contact as $key => $value) {
+			$returnField = array('ContactId', 'Contact.FirstName', 'Contact.LastName');
+			$query = array('GroupId' => $value[Id]);
+			$student = $app->dsQuery("ContactGroupAssign",100,0,$query,$returnField);
+echo '<pre>'; print_r($student); echo '</pre>';
+				$args = array(
+				  'meta_key'     => 'infusionsoft_user_id',
+				  'meta_value'   => $student['ContactId'],
+				 );
+
+				 $wpId = new WP_User_Query( $args );
+// echo '<pre>'; print_r($wpId); echo '</pre>';
+				 if ( ! empty( $wpId->results ) ) {
+				 foreach ( $wpId->results as $user ) {
+					   $userId = $user->ID;
+					 }
+				}echo $userId;
+// echo '<pre>'; print_r($wpId); echo '</pre>';
+				$studentByTag = array(
+					'Contact.LastName'	=> $student['Contact.LastName'],
+					'Contact.FirstName'	=> $student['Contact.FirstName'],
+					'ContactId'					=> $student['ContactId'],
+					'WordpressId'				=> $userId
+				);
+				$contacts[] = $studentByTag;
+			}
+			// echo '<pre>'; print_r($contacts); echo '</pre>';
+			// $mentorByName = unserialize(get_post_meta($postId, '_eventMentorsByName', true));
+			// $mentorByTag = unserialize(get_post_meta($postId, '_eventMentorsByTag', true));
+
+			// echo '<pre>'; print_r($mentorByName); echo '</pre>';
+			// echo '<pre>'; print_r($mentorByTag); echo '</pre>';
+          echo '<div class="mentoringStudents">';
+            echo buld_student_list( $contacts ).'<br /><br />';
+            echo '<pre>'; print_r(unserialize(get_post_meta($postId, '_eventMentors', true))); echo '</pre>';
+            $authors = get_users(array('role' => 'mentor_role'));
+            foreach ($authors as $keys => $values) {
+              // echo '<pre>'; print_r($values->data); echo '</pre>';
+              $mentorId = $values->ID;
+              $mentorName = $values->display_name;
+              // echo $mentorId.'<br>'.$mentorName;
+            }
+          echo '</div>';
+          ?>
+
+          <div class="eventTable" id="eventTable"></div><br /><br />
+
+          <input type="hidden" name="eventAttendees">
+          <input type="submit" value="SUBMIT" /><br /><br />
+
+        </ul>
+	    </form>
+
+
+		</div><!-- #content -->
+	</div><!-- #primary -->
+  <?php get_sidebar(); ?>
+
+</div>
+<?php get_footer(); ?>
